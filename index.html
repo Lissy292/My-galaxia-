@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Galaxia de Amor</title>
+    <style>
+        /* Estilos generales para el fondo del espacio */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050505;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Lienzo donde se dibuja la galaxia animada -->
+    <canvas id="galaxyCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('galaxyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Variable global para controlar la animación del latido
+        let tiempo = 0;
+
+        // Ajustar el lienzo a la pantalla del celular o computadora
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Configuración y textos editables
+        const frases = ["Te Amo David", "I Love You J.Y", "Mi Destino", "Mi Cielo", "Siempre Juntos", "Mi Razón", "Contigo"];
+        const partículas = [];
+        const cantidadParticulas = 120;
+
+        // Estructura de cada frase flotante en forma de corazón
+        class FraseEspacial {
+            constructor() {
+                this.text = frases[Math.floor(Math.random() * frases.length)];
+                this.reset();
+                // Distribución inicial aleatoria para que no salgan todas al mismo tiempo
+                this.radius = Math.random() * 12 + 1;
+            }
+
+            reset() {
+                this.angle = Math.random() * Math.PI * 2; // Ángulo base para la silueta del corazón
+                this.radius = 1; // Comienzan desde el centro matemático
+                this.speed = Math.random() * 0.15 + 0.05; // Velocidad de expansión suave
+                this.opacity = 0;
+                this.fontSize = Math.random() * 8 + 11; // Tamaño de fuente optimizado para móvil
+                // Color único asignado al nacer dentro de la paleta rosa/roja para evitar parpadeos
+                this.color = `hsl(${340 + Math.random() * 25}, 100%, 65%)`;
+            }
+
+            update() {
+                // Las frases se expanden hacia afuera multiplicando la forma base
+                this.radius += this.speed;
+
+                // Ecuación matemática exacta del corazón
+                let t = this.angle;
+                let heartX = 16 * Math.pow(Math.sin(t), 3);
+                let heartY = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+
+                // Efecto dinámico de latido usando ondas de seno sobre el tiempo global
+                let escalaLatido = 1 + Math.sin(tiempo * 0.05) * 0.08;
+
+                // Cálculo final de la posición en pantalla alineado al centro del dispositivo
+                this.x = canvas.width / 2 + heartX * this.radius * escalaLatido;
+                this.y = canvas.height / 2 + heartY * this.radius * escalaLatido;
+
+                // Control progresivo de la opacidad (Aparecen al centro, desaparecen en los bordes)
+                if (this.opacity < 1 && this.radius < 8) this.opacity += 0.04;
+                if (this.radius > 11) this.opacity -= 0.03;
+
+                // Si se vuelven invisibles o salen de la pantalla, se reinician al centro
+                if (this.opacity <= 0 || this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.opacity);
+                ctx.fillStyle = this.color;
+                ctx.font = `bold ${this.fontSize}px Arial`;
+                ctx.textAlign = "center";
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.restore();
+            }
+        }
+
+        // Inicializar el espacio orbital
+        for (let i = 0; i < cantidadParticulas; i++) {
+            partículas.push(new FraseEspacial());
+        }
+
+        // Bucle de animación continuo
+        function animar() {
+            tiempo++; // Incrementa el contador para el latido
+            ctx.fillStyle = 'rgba(5, 5, 5, 0.2)'; // Efecto estelar difuminado
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            partículas.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            requestAnimationFrame(animar);
+        }
+        animar();
+    </script>
+</body>
+</html>
